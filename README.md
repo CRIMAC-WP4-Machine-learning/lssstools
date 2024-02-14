@@ -29,13 +29,14 @@ Only the tracks where all peak samples are contained in the selected regions are
 Data format: http://localhost:23100/help/lsss/2.16.0/#/page/lsss/BroadbandTrackExport
 
 ## Echogram plot
-
+Export of variables selected by the Echogram plot module.
 ## Echosounder data
-
+Export of the horizontally visible echosounder data to raw files. Selected regions do not limit what is exported.
 ## School parameters
-
+Export of school parameters for the selected schools.
 ## Sv
-
+Export of sample values in the selected regions.
 ## Tracks
-a
+Export of tracks detected by the KORONA tracking module. Only tracks completely contained in the selected regions are exported.
 ## TS
+Export of TS targets detected by TS module in LSSS in the selected regions.
