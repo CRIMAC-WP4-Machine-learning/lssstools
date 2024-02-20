@@ -1,16 +1,13 @@
 import json
 import numpy as np
 import pandas as pd
-# For testing only
-# import matplotlib.pyplot as plt
-# import xarray as xr
+from dateutil import parser
 
 """
 These parsers reads the exported files from LSSS
 
 | Authors:
 |       Nils Olav Handegard <nilsolav@hi.no> 
-
 
 """
 
@@ -26,14 +23,15 @@ class lssstools():
         self.jsonfile = jsonfile
         self.exporttype = data['info']['exportType']
         
-        # Check forSupported lsss export types
-        lsssexporttypes = ['BroadbandSv']
-        # lsssexportypes = ['BroadbandBottomData', 'BroadbandSampleData',
-        #                  'BroadbandSv', 'BroadbandTs', 'BroadbandTrack']
+        # Check for supported lsss export types
+        lsssexporttypes = ['BroadbandSv', 'BroadbandTS']
+        # Other datatypes not yet implemented:
+        # ['BroadbandBottomData', 'BroadbandSampleData', 'BroadbandTrack']
         if self.exporttype not in lsssexporttypes:
             raise TypeError("Unsupported LSSS export data type.")
 
     def _Svf_to_df(self):
+        # Parse the Svf data to df
         Dict = {}
         # Loop over regions
         for region, _regions in enumerate(self.jsonstring['regions']):
@@ -83,29 +81,47 @@ class lssstools():
                         errorp.append(_pings['number'])
                         # TODO: Add Nans where no data is present
     
-            df = pd.DataFrame.from_dict(Dict)
-            df['time'] = pd.to_datetime(df['time'])
+        df = pd.DataFrame.from_dict(Dict)
+        df['time'] = pd.to_datetime(df['time'])
+        return df
+
+    def _TSf_to_df(self):
+        # Parse the TSf data to df
+        _js = self.jsonstring
+        Dict = {}
+        for j, _pings in enumerate(_js['pings']):
+            for _channel in _pings['channels']:
+                N = _channel['numFrequencies']
+                for _target in _channel['targets']:
+                    M = len(_target['tsc'])
+                    frequency = list(np.linspace(_channel['minFrequency'],
+                                                 _channel['maxFrequency'],
+                                                 N))
+                    Dict.setdefault('frequency',
+                                    []).extend(frequency)
+                    Dict.setdefault('compensated_TS',
+                                    []).extend(_target['tsc'])
+                    Dict.setdefault('single_target_alongship_angle',
+                                    []).extend([_target['alongshipAngle']]*M)
+                    Dict.setdefault('single_target_athwartship_angle',
+                                    []).extend([_target['athwartshipAngle']]*M)
+                    Dict.setdefault('ping_time',
+                                    []).extend([
+                                        parser.isoparse(_pings['time'])]*M)
+                    Dict.setdefault('ping_number',
+                                    []).extend([_pings['number']]*M)
+                    #Dict.setdefault('single_target_identifier', []).extend([
+                    #    [IDn[i]]*M)
+                    Dict.setdefault('single_target_range',
+                                    []).extend([_target['range']]*M)
+                    Dict.setdefault('single_target_count',
+                                    []).extend([N]*M)
+        df = pd.DataFrame.from_dict(Dict)
         return df
 
     def to_df(self):
         if self.exporttype == 'BroadbandSv':
             df = self._Svf_to_df()
+        elif self.exporttype == 'BroadbandTS':
+            df = self._TSf_to_df()
         return df
-
-
-'''
-jsonfile = './testdata/D2023006003_Svf_MESO1_School_Region_132.json'
-df = readSvf(jsonfile)
-
-# Loop over region and object
-
-df['time'] = df['time'].astype(np.int64)
-dfg =  df.groupby(['region', 'objectnumber'])
-
-for name, _dfg in dfg:
-    print(name)
-    _dfg = _dfg.set_index(['time','freq'])
-    D = xr.Dataset.from_dataframe(_dfg)
-    D['Sv'].plot()
-    plt.show()
-'''
