@@ -1,8 +1,10 @@
 import json
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import xarray as xr
+# For testing only
+# import matplotlib.pyplot as plt
+# import xarray as xr
+
 """
 These parsers reads the exported files from LSSS
 
@@ -13,15 +15,28 @@ These parsers reads the exported files from LSSS
 """
 
 
-def readSvf(jsonfile):
-    with open(jsonfile) as json_file:
-        data = json.load(json_file)
+class lssstools():
+    '''
+    Class for reading lsss export files
+    '''
+    def __init__(self, jsonfile):
+        with open(jsonfile) as json_file:
+            data = json.load(json_file)
+        self.jsonstring = data
+        self.jsonfile = jsonfile
+        self.exporttype = data['info']['exportType']
+        
+        # Check forSupported lsss export types
+        lsssexporttypes = ['BroadbandSv']
+        # lsssexportypes = ['BroadbandBottomData', 'BroadbandSampleData',
+        #                  'BroadbandSv', 'BroadbandTs', 'BroadbandTrack']
+        if self.exporttype not in lsssexporttypes:
+            raise TypeError("Unsupported LSSS export data type.")
 
-    Dict = {}
-    info = data['info']
-    if info['exportType'] == 'BroadbandSv':
+    def _Svf_to_df(self):
+        Dict = {}
         # Loop over regions
-        for region, _regions in enumerate(data['regions']):
+        for region, _regions in enumerate(self.jsonstring['regions']):
             objectnumber = _regions['objectNumber']
             labels = _regions['labels']
             scrutiny = _regions['scrutiny']
@@ -66,14 +81,19 @@ def readSvf(jsonfile):
                     # If the number os samples are to low for svf
                     else:
                         errorp.append(_pings['number'])
-    # TODO: Add Nans where no data is present
+                        # TODO: Add Nans where no data is present
     
-    df = pd.DataFrame.from_dict(Dict)
-    df['time'] = pd.to_datetime(df['time'])
+            df = pd.DataFrame.from_dict(Dict)
+            df['time'] = pd.to_datetime(df['time'])
+        return df
 
-    return df
+    def to_df(self):
+        if self.exporttype == 'BroadbandSv':
+            df = self._Svf_to_df()
+        return df
 
 
+'''
 jsonfile = './testdata/D2023006003_Svf_MESO1_School_Region_132.json'
 df = readSvf(jsonfile)
 
@@ -88,3 +108,4 @@ for name, _dfg in dfg:
     D = xr.Dataset.from_dataframe(_dfg)
     D['Sv'].plot()
     plt.show()
+'''
