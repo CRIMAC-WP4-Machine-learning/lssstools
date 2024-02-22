@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='ektools',
+setup(name='lssstools',
       version='0.1',
       description='Utilities to read exports from LSSS',
       long_description=open('README.md').read(),
@@ -11,5 +11,5 @@ setup(name='ektools',
       license='MIT',
       packages=['lssstools'],
       scripts=[],
-      install_requires=['json', 'pandas'],
+      install_requires=['pandas'],
       zip_safe=False)
