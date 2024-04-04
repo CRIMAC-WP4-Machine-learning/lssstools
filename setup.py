@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='ektools',
-      version='0.1',
+      version='0.1.0',
       description='Utilities to read exports from LSSS',
       long_description=open('README.md').read(),
       long_description_content_type='text/markdown',
