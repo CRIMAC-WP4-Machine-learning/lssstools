@@ -11,5 +11,5 @@ setup(name='ektools',
       license='MIT',
       packages=['lssstools'],
       scripts=[],
-      install_requires=['json', 'pandas'],
+      install_requires=['pandas'],
       zip_safe=False)
